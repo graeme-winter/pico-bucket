@@ -16,8 +16,8 @@ int main() {
   uint offset = pio_add_program(pio, &blink_program);
   printf("Loaded program at %d\n", offset);
 
-  blink_pin_forever(pio, 0, offset, 25, 1000, 0.1);
-  blink_pin_forever(pio, 1, offset, 14, 1000, 0.1);
+  blink_pin_forever(pio, 0, offset, 14, 10, 0.1);
+  blink_pin_forever(pio, 1, offset, 15, 10, 0.5);
 }
 
 void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq,
