@@ -54,3 +54,22 @@ for j in range(0xff):
     matched = matched and (sent[j] == recv[j])
 
 print(f"Binary counter test: {matched}")
+
+# write and read block data
+
+sent = [0xff - j for j in range(0xff)]
+
+for j in range(0, 0xff, 0x20):
+    bus.write_i2c_block_data(ADDRESS, j, sent[j:j+0x20])
+
+recv = []
+for j in range(0, 0xff, 0x20):
+    block = bus.read_i2c_block_data(ADDRESS, j, 0x20)
+    recv += block
+
+matched = True
+for j in range(0xff):
+    matched = matched and (sent[j] == recv[j])
+
+print(f"Block test: {matched}")
+
