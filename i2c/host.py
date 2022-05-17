@@ -1,9 +1,9 @@
-import smbus2
+import smbus
 import time
 
 ADDRESS = 0x42
 
-bus = smbus2.SMBus(1)
+bus = smbus.SMBus(1)
 
 # write recognised byte pattern - 01010101
 
