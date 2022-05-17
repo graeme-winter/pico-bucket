@@ -1,3 +1,4 @@
+import random
 import smbus
 import time
 
@@ -62,10 +63,14 @@ sent = [0xFF - j for j in range(0xFF)]
 for j in range(0, 0xFF, 0x20):
     bus.write_i2c_block_data(ADDRESS, j, sent[j : j + 0x20])
 
-recv = []
-for j in range(0, 0xFF, 0x20):
+recv = [0 for j in range(0x100)]
+blocks = list(range(0, 0xFF, 0x20))
+random.shuffle(blocks)
+
+for j in blocks:
     block = bus.read_i2c_block_data(ADDRESS, j, 0x20)
-    recv += block
+    for _ in range(0x20):
+        recv[j+_] = block[_]
 
 matched = True
 for j in range(0xFF):
