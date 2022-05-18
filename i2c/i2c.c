@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "hardware/clocks.h"
 #include "hardware/i2c.h"
 #include "hardware/irq.h"
 #include "pico/stdlib.h"
@@ -17,6 +18,9 @@ uint8_t ram[256];
 // are predefined
 uint32_t blink_registers[4];
 uint8_t* register_bytes = (uint8_t *) &blink_registers;
+
+// static data
+uint32_t clock_speed = 0;
 
 uint8_t command;
 uint8_t offset;
@@ -87,6 +91,8 @@ void i2c0_irq_handler() {
 
 int main() {
   stdio_init_all();
+
+  clock_speed = clock_get_hz(clock_sys);
 
   i2c_init(i2c0, 100e3);
   i2c_set_slave_mode(i2c0, true, I2C0_SLAVE_ADDR);
