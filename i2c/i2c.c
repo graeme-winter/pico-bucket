@@ -21,6 +21,7 @@ uint8_t* register_bytes = (uint8_t *) &blink_registers;
 
 // static data
 uint32_t clock_speed = 0;
+uint8_t* clock_bytes = (uint8_t *) &clock_speed;
 
 uint8_t command;
 uint8_t offset;
@@ -53,10 +54,7 @@ void i2c0_handler() {
 
   // read request
   if (status & I2C_IC_INTR_STAT_R_RD_REQ_BITS) {
-    /* Write the data from the current address in RAM. */
-    i2c0_hw->data_cmd = (uint32_t)(ram[ram_addr++]);
-
-    /* Clear the interrupt. */
+    i2c0_hw->data_cmd = (uint32_t)(clock_bytes[offset++]);
     i2c0_hw->clr_rd_req;
   }
 }
