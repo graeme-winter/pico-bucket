@@ -16,7 +16,7 @@ uint8_t ram[256];
 // by IRQ function to disable - N.B. this implies that the IRQ functions
 // are predefined
 uint32_t blink_registers[4];
-uint8_t register_bytes = (uint8_t) &blink_registers;
+uint8_t* register_bytes = (uint8_t *) &blink_registers;
 
 uint8_t command;
 uint8_t offset;
@@ -40,7 +40,7 @@ void i2c0_handler() {
       printf("Command was %d\n", command);
       if (command == 0x2) {
         printf("Registers %d %d %d %d\n", blink_registers[0],
-               blink_registers[1], blink_registers[2], blink_registers[3])
+               blink_registers[1], blink_registers[2], blink_registers[3]);
       }
     } else {
       register_bytes[offset++] = (uint8_t)(value & I2C_IC_DATA_CMD_BITS);
@@ -55,7 +55,6 @@ void i2c0_handler() {
     /* Clear the interrupt. */
     i2c0_hw->clr_rd_req;
   }
-}
 }
 
 void i2c0_irq_handler() {
