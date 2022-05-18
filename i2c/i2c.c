@@ -12,6 +12,54 @@
 uint8_t ram_addr;
 uint8_t ram[256];
 
+// delay high low cycles - delay high low sent forward to PIO, cycles used
+// by IRQ function to disable - N.B. this implies that the IRQ functions
+// are predefined
+union {
+  uint32_t blink_registers[4];
+  uint8_t register_bytes[16];
+}
+
+uint8_t command;
+uint8_t offset;
+
+// simple API - 0x0 gets the CPU clock speed
+//              0x1 is followed by 16 more bytes to configure PIO
+//              0x2 print registers
+//              HIGH signal on GPIO will trigger PIO
+
+void i2c0_handler() {
+  uint32_t status = i2c0_hw->intr_stat;
+  uint32_t value;
+
+  // write request
+  if (status & I2C_IC_INTR_STAT_R_RX_FULL_BITS) {
+    value = i2c0_hw->data_cmd;
+
+    if (value & I2C_IC_DATA_CMD_FIRST_DATA_BYTE_BITS) {
+      command = (uint8_t)(value & I2C_IC_DATA_CMD_BITS);
+      offset = 0;
+      printf("Command was %d\n", command);
+      if (command == 0x2) {
+        printf("Registers %d %d %d %d\n", blink_registers[0],
+               blink_registers[1], blink_registers[2], blink_registers[3])
+      }
+    } else {
+      register_bytes[offset++] = (uint8_t)(value & I2C_IC_DATA_CMD_BITS);
+    }
+  }
+
+  // read request
+  if (status & I2C_IC_INTR_STAT_R_RD_REQ_BITS) {
+    /* Write the data from the current address in RAM. */
+    i2c0_hw->data_cmd = (uint32_t)(ram[ram_addr++]);
+
+    /* Clear the interrupt. */
+    i2c0_hw->clr_rd_req;
+  }
+}
+}
+
 void i2c0_irq_handler() {
   uint32_t status = i2c0_hw->intr_stat;
   uint32_t value;
@@ -53,13 +101,10 @@ int main() {
 
   ram_addr = 0;
 
-  /* Select the interrupts we want. */
   i2c0_hw->intr_mask =
       I2C_IC_INTR_MASK_M_RD_REQ_BITS | I2C_IC_INTR_MASK_M_RX_FULL_BITS;
 
-  /* Set up the interrupt handler. */
-  irq_set_exclusive_handler(I2C0_IRQ, i2c0_irq_handler);
-  /* Enable I2C interrupts. */
+  irq_set_exclusive_handler(I2C0_IRQ, i2c0_handler);
   irq_set_enabled(I2C0_IRQ, true);
 
   while (true) {
