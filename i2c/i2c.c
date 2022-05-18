@@ -15,10 +15,8 @@ uint8_t ram[256];
 // delay high low cycles - delay high low sent forward to PIO, cycles used
 // by IRQ function to disable - N.B. this implies that the IRQ functions
 // are predefined
-union {
-  uint32_t blink_registers[4];
-  uint8_t register_bytes[16];
-}
+uint32_t blink_registers[4];
+uint8_t register_bytes = (uint8_t) &blink_registers;
 
 uint8_t command;
 uint8_t offset;
