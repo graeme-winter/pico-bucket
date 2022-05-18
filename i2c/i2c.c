@@ -92,7 +92,7 @@ void i2c0_irq_handler() {
 int main() {
   stdio_init_all();
 
-  clock_speed = clock_get_hz(clock_sys);
+  clock_speed = clock_get_hz(clk_sys);
 
   i2c_init(i2c0, 100e3);
   i2c_set_slave_mode(i2c0, true, I2C0_SLAVE_ADDR);
