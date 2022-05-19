@@ -19,8 +19,6 @@ uint8_t ram[256];
 uint32_t blink_registers[4];
 uint8_t* register_bytes = (uint8_t *) &blink_registers;
 
-uint16_t bucket[0xffff];
-
 // static data
 uint32_t clock_speed = 0;
 uint8_t* clock_bytes = (uint8_t *) &clock_speed;
@@ -48,11 +46,6 @@ void i2c0_handler() {
       if (command == 0x2) {
         printf("Registers %d %d %d %d\n", blink_registers[0],
                blink_registers[1], blink_registers[2], blink_registers[3]);
-      } elif (command == 0x3) {
-        // prepare for the big send
-        for (size_t j = 0; j < 0xffff; j++) {
-          bucket[j] = j;
-        }
       }
     } else {
       register_bytes[offset++] = (uint8_t)(value & I2C_IC_DATA_CMD_BITS);
@@ -61,12 +54,8 @@ void i2c0_handler() {
 
   // read request
   if (status & I2C_IC_INTR_STAT_R_RD_REQ_BITS) {
-    if (command == 0x3) {
-      i2c_write_raw_blocking(i2c0, (uint8_t) bucket, 2 * 0xffff);
-    } else {
-      i2c0_hw->data_cmd = (uint32_t)(clock_bytes[offset++]);
-      i2c0_hw->clr_rd_req;
-    }
+    i2c0_hw->data_cmd = (uint32_t)(clock_bytes[offset++]);
+    i2c0_hw->clr_rd_req;
   }
 }
 
