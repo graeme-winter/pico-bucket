@@ -17,10 +17,11 @@ pico_set_program_name(spi "spi")
 pico_set_program_version(spi "0.1")
 
 # stdout -> UART
-pico_enable_stdio_uart(ispi 1)
+pico_enable_stdio_uart(spi 1)
 pico_enable_stdio_usb(spi 0)
 
 target_link_libraries(spi pico_stdlib)
 target_link_libraries(spi hardware_spi)
+target_link_libraries(spi hardware_dma)
 
 pico_add_extra_outputs(spi)
