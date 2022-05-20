@@ -28,9 +28,9 @@ int main() {
   // read from channel
   printf("Reading\n");
   spi_read_blocking(spi_default, 0, buffer, BUFFER_SIZE);
-  printf("First item: %d\n", buffer[0]);
   
   for (uint16_t j = 0; j < BUFFER_SIZE; j++) {
+    printf("Item %d: %d\n", j, buffer[j]);
     buffer[j] = j % 0x100;
   }
 
