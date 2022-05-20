@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BUFFER_SIZE 64
+#define BUFFER_SIZE 1024
 
 int main() {
   stdio_init_all();
@@ -23,15 +23,19 @@ int main() {
   // grab unused dma channel for sending data
   // const uint32_t dma_tx = dma_claim_unused_channel(true);
 
-  static uint8_t buffer[BUFFER_SIZE];
+  static uint8_t buffer[BUFFER_SIZE], buffer2[BUFFER_SIZE];
 
-  // read from channel
-  printf("Reading\n");
-  spi_read_blocking(spi_default, 0, buffer, BUFFER_SIZE);
-  
-  for (uint16_t j = 0; j < BUFFER_SIZE; j++) {
-    printf("Item %d: %d\n", j, buffer[j]);
-    buffer[j] = j % 0x100;
+  while (true) {
+    for (uint16_t j = 0; j < BUFFER_SIZE; j++) {
+      buffer2[j] = j % 0x100;
+    }
+
+    printf("Reading\n");
+    int nn = spi_write_read_blocking(spi_default, buffer2, buffer, BUFFER_SIZE);
+    printf("x/o %d\n", nn);
+    for (uint16_t j = 0; j < BUFFER_SIZE; j++) {
+      buffer[j] = j % 0x100;
+    }
   }
 
   // dma_channel_config config = dma_channel_get_default_config(dma_tx);
@@ -44,9 +48,6 @@ int main() {
   // printf("Waiting for DMA completion\n");
   // dma_channel_wait_for_finish_blocking(dma_tx);
   // printf("DMA finished\n");
-  printf("Write\n");
-  int nn = spi_write_blocking(spi_default, buffer, BUFFER_SIZE);
-  printf("Wrote %d bytes\n", nn);
 
   // clean up
   // dma_channel_unclaim(dma_tx);
