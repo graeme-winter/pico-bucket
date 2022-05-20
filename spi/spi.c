@@ -44,10 +44,6 @@ int main() {
   // printf("Waiting for DMA completion\n");
   // dma_channel_wait_for_finish_blocking(dma_tx);
   // printf("DMA finished\n");
-  printf("Waiting for writable\n");
-  while (!spi_is_writable(spi_default)) {
-    tight_loop_contents();
-  }
   printf("Write\n");
   int nn = spi_write_blocking(spi_default, buffer, BUFFER_SIZE);
   printf("Wrote %d bytes\n", nn);
