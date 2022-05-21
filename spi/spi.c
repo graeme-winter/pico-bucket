@@ -11,15 +11,15 @@ int main() {
 
   printf("SPI start\n");
   // 1MHz transfer
-  printf("Baud rate %d\n", spi_init(spi_default, 1000000));
-  spi_set_format(spi_default, 8, 1, 1, SPI_MSB_FIRST);
+  printf("Baud rate %d\n", spi_init(spi1, 1000000));
+  spi_set_format(spi1, 8, 1, 1, SPI_MSB_FIRST);
 
-  gpio_set_function(PICO_DEFAULT_SPI_RX_PIN, GPIO_FUNC_SPI);
-  gpio_set_function(PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
-  gpio_set_function(PICO_DEFAULT_SPI_TX_PIN, GPIO_FUNC_SPI);
-  gpio_set_function(PICO_DEFAULT_SPI_CSN_PIN, GPIO_FUNC_SPI);
+  gpio_set_function(10, GPIO_FUNC_SPI);
+  gpio_set_function(11, GPIO_FUNC_SPI);
+  gpio_set_function(12, GPIO_FUNC_SPI);
+  gpio_set_function(13, GPIO_FUNC_SPI);
 
-  spi_set_slave(spi_default, true);
+  spi_set_slave(spi1, true);
   // grab unused dma channel for sending data
   // const uint32_t dma_tx = dma_claim_unused_channel(true);
 
@@ -31,7 +31,7 @@ int main() {
     }
 
     printf("Reading\n");
-    int nn = spi_write_read_blocking(spi_default, buffer2, buffer, BUFFER_SIZE);
+    int nn = spi_write_read_blocking(spi1, buffer2, buffer, BUFFER_SIZE);
     printf("x/o %d\n", nn);
     for (uint16_t j = 0; j < BUFFER_SIZE; j++) {
       buffer[j] = j % 0x100;
