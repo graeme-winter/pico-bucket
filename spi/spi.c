@@ -4,16 +4,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BUFFER_SIZE 20
+#define BUFFER_SIZE 20000
 
 int main() {
   stdio_init_all();
 
-  spi_inst_t *spix = spi1;
+  spi_inst_t *spix = spi0;
   
   printf("SPI start\n");
   // ~ 1 MHz transfer
-  printf("Baud rate %d\n", spi_init(spix, 1000000));
+  printf("Baud rate %d\n", spi_init(spix, 10000000));
   spi_set_format(spix, 8, 1, 1, SPI_MSB_FIRST);
 
   // 10...13 for spi1
@@ -40,7 +40,6 @@ int main() {
     // set up buffer for next cycle
     for (int j = 0; j < BUFFER_SIZE; j++) {
       buffer[j] = (cycle + j) % 0x100;
-      buffer2[j] = 0xff;
     }
     int nn = spi_write_read_blocking(spix, buffer, buffer2, BUFFER_SIZE);
     printf("Cycle: %d N: %d\n", cycle, nn);
