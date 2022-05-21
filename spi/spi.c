@@ -4,53 +4,47 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BUFFER_SIZE 20000
+#define BUFFER_SIZE 20
 
 int main() {
   stdio_init_all();
 
+  spi_inst_t *spix = spi1;
+  
   printf("SPI start\n");
-  // 1MHz transfer
-  printf("Baud rate %d\n", spi_init(spi1, 1000000));
-  spi_set_format(spi1, 8, 1, 1, SPI_MSB_FIRST);
+  // ~ 1 MHz transfer
+  printf("Baud rate %d\n", spi_init(spix, 1000000));
+  spi_set_format(spix, 8, 1, 1, SPI_MSB_FIRST);
 
-  gpio_set_function(10, GPIO_FUNC_SPI);
-  gpio_set_function(11, GPIO_FUNC_SPI);
-  gpio_set_function(12, GPIO_FUNC_SPI);
-  gpio_set_function(13, GPIO_FUNC_SPI);
+  // 10...13 for spi1
+  // 16...19 for spi0
+  if (spix == spi0) {
+    gpio_set_function(16, GPIO_FUNC_SPI);
+    gpio_set_function(17, GPIO_FUNC_SPI);
+    gpio_set_function(18, GPIO_FUNC_SPI);
+    gpio_set_function(19, GPIO_FUNC_SPI);
+  } else {
+    gpio_set_function(10, GPIO_FUNC_SPI);
+    gpio_set_function(11, GPIO_FUNC_SPI);
+    gpio_set_function(12, GPIO_FUNC_SPI);
+    gpio_set_function(13, GPIO_FUNC_SPI);
+  }    
+    
+  spi_set_slave(spix, true);
 
-  spi_set_slave(spi1, true);
-  // grab unused dma channel for sending data
-  // const uint32_t dma_tx = dma_claim_unused_channel(true);
-
-  static uint8_t buffer[BUFFER_SIZE], buffer2[BUFFER_SIZE];
-
-  while (true) {
-    for (uint16_t j = 0; j < BUFFER_SIZE; j++) {
-      buffer2[j] = j % 0x100;
+  uint8_t buffer[BUFFER_SIZE], buffer2[BUFFER_SIZE];
+  for (int j = 0; j < BUFFER_SIZE; j++) {
+    buffer[j] = 0xff;
+  }
+  for (int cycle = 0;;cycle++) {
+    // set up buffer for next cycle
+    for (int j = 0; j < BUFFER_SIZE; j++) {
+      buffer[j] = (cycle + j) % 0x100;
+      buffer2[j] = 0xff;
     }
-
-    printf("Reading\n");
-    int nn = spi_write_read_blocking(spi1, buffer2, buffer, BUFFER_SIZE);
-    printf("x/o %d\n", nn);
-    for (uint16_t j = 0; j < BUFFER_SIZE; j++) {
-      buffer[j] = j % 0x100;
-    }
+    int nn = spi_write_read_blocking(spix, buffer, buffer2, BUFFER_SIZE);
+    printf("Cycle: %d N: %d\n", cycle, nn);
   }
 
-  // dma_channel_config config = dma_channel_get_default_config(dma_tx);
-  // channel_config_set_transfer_data_size(&config, DMA_SIZE_16);
-  // channel_config_set_dreq(&config, spi_get_dreq(spi_default, true));
-  // dma_channel_configure(dma_tx, &config, &spi_get_hw(spi_default)->dr,
-  // buffer,
-  //                       BUFFER_SIZE, false);
-  // printf("DMA start\n");
-  // dma_channel_start(dma_tx);
-  // printf("Waiting for DMA completion\n");
-  // dma_channel_wait_for_finish_blocking(dma_tx);
-  // printf("DMA finished\n");
-
-  // clean up
-  // dma_channel_unclaim(dma_tx);
   return 0;
 }
