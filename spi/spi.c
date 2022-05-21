@@ -10,7 +10,7 @@ int main() {
   stdio_init_all();
 
   spi_inst_t *spix = spi0;
-  
+
   printf("SPI start\n");
   // ~ 1 MHz transfer
   printf("Baud rate %d\n", spi_init(spix, 10000000));
@@ -28,15 +28,15 @@ int main() {
     gpio_set_function(11, GPIO_FUNC_SPI);
     gpio_set_function(12, GPIO_FUNC_SPI);
     gpio_set_function(13, GPIO_FUNC_SPI);
-  }    
-    
+  }
+
   spi_set_slave(spix, true);
 
   uint8_t buffer[BUFFER_SIZE], buffer2[BUFFER_SIZE];
   for (int j = 0; j < BUFFER_SIZE; j++) {
     buffer[j] = 0xff;
   }
-  for (int cycle = 0;;cycle++) {
+  for (int cycle = 0;; cycle++) {
     // set up buffer for next cycle
     for (int j = 0; j < BUFFER_SIZE; j++) {
       buffer[j] = (cycle + j) % 0x100;
