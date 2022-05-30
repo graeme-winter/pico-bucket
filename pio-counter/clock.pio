@@ -6,16 +6,18 @@ rise:
     push
     mov x osr
 high:
-    in y 1
+    in pins 1
+    mov y isr
     jmp !y fall
     jmp x-- high
 fall:
     in x 32
-    push
+    push noblock
     mov x osr
 low:
-    in y 1
-    jmp y-- rise ; works because y tested _before_ decrement
+    in pins 1
+    mov y isr
+    jmp y-- rise
     jmp x-- low
 .wrap
 
@@ -26,7 +28,9 @@ void clock_program_init(PIO pio, uint sm, uint offset, uint pin) {
 
     pio_sm_config c = clock_program_get_default_config(offset);
     pio_gpio_init(pio, pin);
-    sm_config_set_set_pins(&c, pin, 1);
+    sm_config_set_in_pins(&c, pin);
+    sm_config_set_jmp_pin(&c, pin);
+    // sm_config_set_set_pins(&c, pin, 1);
     pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
     pio_sm_init(pio, sm, offset, &c);
 

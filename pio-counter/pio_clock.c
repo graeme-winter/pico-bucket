@@ -8,6 +8,7 @@
 #include "clock.pio.h"
 
 int main() {
+  setup_default_uart();
 
   const uint32_t output_pin = 16;
   const uint32_t input_pin = 17;
@@ -31,6 +32,7 @@ int main() {
   pio_sm_set_enabled(pio1, 0, true);  
 
   while (true) {
-    printf("%d\n", pio_sm_get_blocking(pio0, 0));
+    int ticks = 0xffffffff - pio_sm_get_blocking(pio0, 0);
+    printf("%d\n", ticks);
   }
 }
