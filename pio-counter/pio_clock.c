@@ -32,7 +32,7 @@ int main() {
   pio_sm_set_enabled(pio1, 0, true);  
 
   while (true) {
-    int ticks = 0xffffffff - pio_sm_get_blocking(pio0, 0);
+    int ticks = 1000000000 - pio_sm_get_blocking(pio0, 0);
     printf("%d\n", ticks);
   }
 }

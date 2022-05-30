@@ -2,7 +2,7 @@
     pull block
 .wrap_target
 rise:
-    in x 32
+    mov isr x
     push
     mov x osr
 high:
@@ -11,8 +11,8 @@ high:
     jmp !y fall
     jmp x-- high
 fall:
-    in x 32
-    push noblock
+    mov isr x
+    push
     mov x osr
 low:
     in pins 1
@@ -36,7 +36,7 @@ void clock_program_init(PIO pio, uint sm, uint offset, uint pin) {
 
     // initialise with as many ticks as possible TODO: count clock ticks
     // per iteration to make sure I know how many seconds this is worth
-    pio->txf[sm] = 0xffffffff;
+    pio->txf[sm] = 1000000000;
 }
 
 %}
