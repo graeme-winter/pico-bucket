@@ -18,15 +18,14 @@ int main() {
   
   uint32_t offset0 = pio_add_program(pio0, &clock_program);
 
-  clock_program_init(pio0, 0, offset0, input_pin);
+  clock_program_init(pio0, 0, offset0, input_pin, 12500);
 
   uint32_t offset1 = pio_add_program(pio1, &timer_program);
 
-  // N.B. this is clocked at 5 MHz -> /= 25
-  timer_program_init(pio1, 0, offset1, output_pin, 25);
+  timer_program_init(pio1, 0, offset1, output_pin, 12500);
 
-  // 5 Hz
-  pio1->txf[0] = 500000 - 3;
+  // 10 Hz
+  pio1->txf[0] = 1000 - 3;
 
   pio_sm_set_enabled(pio0, 0, true);  
   pio_sm_set_enabled(pio1, 0, true);  
