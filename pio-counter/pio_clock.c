@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "clock.pio.h"
 #include "hardware/clocks.h"
 #include "hardware/pio.h"
@@ -5,8 +7,7 @@
 
 int main() {
 
-  static const uint led_pin = 25;
-  static const float pio_freq = 2000;
+  static const uint pin = 17;
 
   PIO pio = pio0;
 
@@ -14,13 +15,11 @@ int main() {
 
   uint offset = pio_add_program(pio, &clock_program);
 
-  float div = (float)clock_get_hz(clk_sys) / pio_freq;
-
-  clock_program_init(pio, sm, offset, led_pin, div);
+  clock_program_init(pio, sm, offset, pin);
 
   pio_sm_set_enabled(pio, sm, true);
 
   while (true) {
-    sleep_ms(1000);
+    printf("%d\n", pio_sm_get_blocking(pio, sm));
   }
 }
