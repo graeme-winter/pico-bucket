@@ -24,14 +24,17 @@ int main() {
 
   timer_program_init(pio1, 0, offset1, output_pin, 12500);
 
-  // 10 Hz
-  pio1->txf[0] = 1000 - 3;
+  pio1->txf[0] = 5000 - 3;
 
   pio_sm_set_enabled(pio0, 0, true);  
   pio_sm_set_enabled(pio1, 0, true);  
 
   while (true) {
-    int ticks = 1000000000 - pio_sm_get_blocking(pio0, 0);
-    printf("%d\n", ticks);
+    uint32_t ticks = pio_sm_get_blocking(pio0, 0);
+    if (ticks & 0x80000000) {
+      printf("High %d\n", 0xffffffff - ticks);
+    } else {
+      printf("Low  %d\n", 0x7fffffff - ticks);
+    }
   }
 }

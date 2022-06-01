@@ -4,7 +4,7 @@
 rise:
     mov isr x
     push
-    mov x osr
+    mov x !null
 high:
     in pins 1
     mov y isr
@@ -37,7 +37,7 @@ void clock_program_init(PIO pio, uint sm, uint offset, uint pin, uint div) {
 
     // initialise with as many ticks as possible TODO: count clock ticks
     // per iteration to make sure I know how many seconds this is worth
-    pio->txf[sm] = 1000000000;
+    pio->txf[sm] = 0x7fffffff;
 }
 
 %}
