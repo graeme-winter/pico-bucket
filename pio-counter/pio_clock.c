@@ -7,8 +7,12 @@
 #include "clock.pio.h"
 #include "timer.pio.h"
 
+#define SIZE 50000
+
 int main() {
   setup_default_uart();
+
+  uint32_t counts[SIZE];
 
   const uint32_t output_pin = 16;
   const uint32_t input_pin = 17;
@@ -18,7 +22,7 @@ int main() {
 
   uint32_t offset0 = pio_add_program(pio0, &clock_program);
 
-  clock_program_init(pio0, 0, offset0, input_pin, 1);
+  clock_program_init(pio0, 0, offset0, input_pin, 25);
 
   uint32_t offset1 = pio_add_program(pio1, &timer_program);
 
@@ -30,13 +34,19 @@ int main() {
   pio_sm_set_enabled(pio0, 0, true);
 
   while (true) {
-    uint32_t ticks = pio_sm_get_blocking(pio0, 0) - 1;
-    if (ticks & 0x80000000) {
-      ticks = 5 * (0xffffffff - ticks);
-      printf("High: %d\n", ticks);
-    } else {
-      ticks = 5 * (0x7fffffff - ticks);
-      printf("Low:  %d\n", ticks);
+    for (int j = 0; j < SIZE; j++) {
+      counts[j] = pio_sm_get_blocking(pio0, 0);
+    }
+
+    for (int j = 0; j < SIZE; j++) {
+      uint32_t ticks = counts[j] - 1;
+      if (ticks & 0x80000000) {
+        ticks = 5 * (0xffffffff - ticks);
+        printf("High: %d %d\n", ticks / 5, j);
+      } else {
+        ticks = 5 * (0x7fffffff - ticks);
+        printf("Low:  %d %d\n", ticks / 5, j);
+      }
     }
   }
 }
