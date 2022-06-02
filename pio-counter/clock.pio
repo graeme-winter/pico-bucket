@@ -5,7 +5,9 @@ rise:
     mov isr x
     push
     mov x !null
+    nop [1]
 high:
+    in null 31
     in pins 1
     mov y isr
     jmp !y fall
@@ -14,7 +16,9 @@ fall:
     mov isr x
     push
     mov x osr
+    nop [1]
 low:
+    in null 31
     in pins 1
     mov y isr
     jmp y-- rise
