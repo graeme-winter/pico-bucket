@@ -4,8 +4,8 @@
 #include "hardware/pio.h"
 #include "pico/stdlib.h"
 
-#include "timer.pio.h"
 #include "clock.pio.h"
+#include "timer.pio.h"
 
 int main() {
   setup_default_uart();
@@ -15,7 +15,7 @@ int main() {
 
   // pio0 - input timer
   // pio1 - output clock
-  
+
   uint32_t offset0 = pio_add_program(pio0, &clock_program);
 
   clock_program_init(pio0, 0, offset0, input_pin, 1);
@@ -26,8 +26,8 @@ int main() {
 
   pio1->txf[0] = 500000 - 3;
 
-  pio_sm_set_enabled(pio1, 0, true);  
-  pio_sm_set_enabled(pio0, 0, true);  
+  pio_sm_set_enabled(pio1, 0, true);
+  pio_sm_set_enabled(pio0, 0, true);
 
   while (true) {
     uint32_t ticks = pio_sm_get_blocking(pio0, 0) - 1;
