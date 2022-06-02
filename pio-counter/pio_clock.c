@@ -18,23 +18,25 @@ int main() {
   
   uint32_t offset0 = pio_add_program(pio0, &clock_program);
 
-  clock_program_init(pio0, 0, offset0, input_pin, 12500);
+  clock_program_init(pio0, 0, offset0, input_pin, 1);
 
   uint32_t offset1 = pio_add_program(pio1, &timer_program);
 
-  timer_program_init(pio1, 0, offset1, output_pin, 12500);
+  timer_program_init(pio1, 0, offset1, output_pin, 125);
 
-  pio1->txf[0] = 5000 - 3;
+  pio1->txf[0] = 500000 - 3;
 
-  pio_sm_set_enabled(pio0, 0, true);  
   pio_sm_set_enabled(pio1, 0, true);  
+  pio_sm_set_enabled(pio0, 0, true);  
 
   while (true) {
-    uint32_t ticks = pio_sm_get_blocking(pio0, 0);
+    uint32_t ticks = pio_sm_get_blocking(pio0, 0) - 1;
     if (ticks & 0x80000000) {
-      printf("High %d\n", 0xffffffff - ticks);
+      ticks = 5 * (0xffffffff - ticks);
+      printf("High: %d\n", ticks);
     } else {
-      printf("Low  %d\n", 0x7fffffff - ticks);
+      ticks = 5 * (0x7fffffff - ticks);
+      printf("Low:  %d\n", ticks);
     }
   }
 }

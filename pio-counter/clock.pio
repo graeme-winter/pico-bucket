@@ -1,11 +1,11 @@
 .program clock
-    pull block
-.wrap_target
+    pull noblock
 rise:
+    nop [1]
     mov isr x
     push
     mov x !null
-    nop [1]
+    jmp x-- high
 high:
     in null 31
     in pins 1
@@ -13,17 +13,17 @@ high:
     jmp !y fall
     jmp x-- high
 fall:
+    nop [1]
     mov isr x
     push
     mov x osr
-    nop [1]
+    jmp x-- low
 low:
     in null 31
     in pins 1
     mov y isr
     jmp y-- rise
     jmp x-- low
-.wrap
 
 % c-sdk {
 
