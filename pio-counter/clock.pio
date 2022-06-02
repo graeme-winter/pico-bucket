@@ -14,6 +14,10 @@
 
 .program clock
     pull noblock    ; noblock just in case we roll over
+    wait 1 pin 0    ; wait until pin goes high
+    mov x :: osr    ; write 0xffffffffe to x
+    nop [7]
+    jmp high;
 rise:
     nop [1]         ; 2 cycle delay as came from jmp y-- rise
     mov isr x       ; push x out
