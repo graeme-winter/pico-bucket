@@ -22,7 +22,7 @@ int main() {
 
   uint32_t offset0 = pio_add_program(pio0, &clock_program);
 
-  clock_program_init(pio0, 0, offset0, input_pin, 25);
+  clock_program_init(pio0, 0, offset0, input_pin);
 
   uint32_t offset1 = pio_add_program(pio1, &timer_program);
 
@@ -42,10 +42,10 @@ int main() {
       uint32_t ticks = counts[j] - 1;
       if (ticks & 0x80000000) {
         ticks = 5 * (0xffffffff - ticks);
-        printf("High: %d %d\n", ticks / 5, j);
+        printf("High: %d %d\n", ticks / 10, j);
       } else {
         ticks = 5 * (0x7fffffff - ticks);
-        printf("Low:  %d %d\n", ticks / 5, j);
+        printf("Low:  %d %d\n", ticks / 10, j);
       }
     }
   }

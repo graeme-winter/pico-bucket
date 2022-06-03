@@ -46,7 +46,7 @@ low:
 % c-sdk {
 
 // Helper function (for use in C program) to initialize this PIO program
-void clock_program_init(PIO pio, uint sm, uint offset, uint pin, uint div) {
+void clock_program_init(PIO pio, uint sm, uint offset, uint pin) {
 
     pio_sm_config c = clock_program_get_default_config(offset);
     pio_gpio_init(pio, pin);
@@ -54,7 +54,7 @@ void clock_program_init(PIO pio, uint sm, uint offset, uint pin, uint div) {
     sm_config_set_jmp_pin(&c, pin);
     // sm_config_set_set_pins(&c, pin, 1);
     pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
-    sm_config_set_clkdiv_int_frac(&c, div, 0);
+    sm_config_set_clkdiv_int_frac(&c, 12, 128);
     pio_sm_init(pio, sm, offset, &c);
 
     // initialise with as many ticks as possible TODO: count clock ticks
