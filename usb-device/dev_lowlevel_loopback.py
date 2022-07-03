@@ -10,6 +10,7 @@
 
 import usb.core
 import usb.util
+import sys
 
 # find our device
 dev = usb.core.find(idVendor=0x0000, idProduct=0x0001)
@@ -37,8 +38,9 @@ inep = usb.util.find_descriptor(
 assert inep is not None
 assert outep is not None
 
-setting = chr(7)
-outep.write(setting)
-status = inep.read(1)
+for j in range(1024):
+    setting = chr(j % 8)
+    outep.write(setting)
+    status = inep.read(1)
 
-print("Device Says: {status}")
+    print(f"Device {j}: {status[0]}")

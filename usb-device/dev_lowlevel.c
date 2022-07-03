@@ -1,3 +1,4 @@
+#include "hardware/gpio.h"
 #include "hardware/irq.h"
 #include "hardware/regs/usb.h"
 #include "hardware/resets.h"
@@ -369,6 +370,9 @@ void ep1_out_handler(uint8_t *buf, uint16_t len) {
   printf("RX %d bytes from host\n", len);
   struct usb_endpoint_configuration *ep =
       usb_get_endpoint_configuration(EP2_IN_ADDR);
+  for (int pin = 11; pin < 14; pin++) {
+    gpio_put(pin, (1 << (pin - 11)) & buf[0]);
+  }
   usb_start_transfer(ep, buf, len);
 }
 
@@ -379,8 +383,15 @@ void ep2_in_handler(uint8_t *buf, uint16_t len) {
 
 int main(void) {
   stdio_init_all();
-  printf("USB Device Low-Level hardware example\n");
+  printf("USB Device to control traffic lights\n");
   usb_device_init();
+
+  // set up GPIO
+  for (int pin = 11; pin < 14; pin++) {
+    gpio_init(pin);
+    gpio_set_dir(pin, GPIO_OUT);
+    gpio_put(pin, false);
+  }
 
   while (!configured) {
     tight_loop_contents();
