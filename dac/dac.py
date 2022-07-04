@@ -5,7 +5,7 @@ import struct
 import math
 
 # eight bit DAC - keep each 8 bit assignment for 5 clock ticks as need to allow
-# time for jmp and pull calls
+# time for jmp and pull calls but still a sensible clock multiplier
 @asm_pio(
     out_init=(
         PIO.OUT_LOW,
@@ -28,20 +28,18 @@ def eight_bit_dac():
     out(pins, 8)
     jmp("loop")[2]
 
-
-# generate input as a byte array - here sine wave lifted to be > 0
-
-nn = 100
+nn = 200
 
 b = array.array(
     "B", [127 + int(round(127 * math.sin(_ * math.pi / nn))) for _ in range(2 * nn)]
 )
 
 # pack into four-byte ints
-data = array.array("I", struct.unpack("I" * 50, b))
+data = array.array("I", struct.unpack("I" * int(nn / 4), b))
 
-# sm to 50 kHz -> each update above takes 5 ticks so 10 kHz wave, and emable
-sm = StateMachine(0, eight_bit_dac, freq=50000, out_base=Pin(2))
+# sm to 50 kHz -> each update above takes 5 ticks so 20 kHz wave update,
+# on 200 point line so 100 Hz sine wave
+sm = StateMachine(0, eight_bit_dac, freq=100000, out_base=Pin(2))
 sm.active(1)
 
 while True:
