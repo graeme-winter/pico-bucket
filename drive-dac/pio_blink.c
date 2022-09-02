@@ -1,10 +1,13 @@
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "blink.pio.h"
 #include "hardware/dma.h"
 #include "hardware/pio.h"
 #include "pico/stdlib.h"
+
+#define SIZE 100000
 
 int main() {
 
@@ -18,10 +21,12 @@ int main() {
 
   uint offset = pio_add_program(pio, &blink_program);
 
-  // set up data array - 500 elements to allow integral fitting into
-  // 4 byte words
-  uint8_t data[50000];
-  for (int j = 0; j < 50000; j++) {
+  // set up data array - SIZE elements to allow time for DMA restart
+  // 2 * pi / 125. to give 1 MHz
+
+  uint8_t data[SIZE];
+
+  for (int j = 0; j < SIZE; j++) {
     data[j] = 127 + 128 * sin(2 * M_PI * j / 125.);
   }
 
@@ -49,8 +54,9 @@ int main() {
   channel_config_set_write_increment(&dmc_b, false);
   channel_config_set_chain_to(&dmc_b, dma_a);
 
+  // SIZE / 4 as DMA is moving 4 byte words
   dma_channel_configure(dma_a, &dmc_a, (volatile void *)&(pio->txf[sm]),
-                        (const volatile void *)data, 12500, false);
+                        (const volatile void *)data, SIZE / 4, false);
 
   pio_sm_set_enabled(pio, sm, true);
   printf("PIO started\n");
@@ -60,10 +66,10 @@ int main() {
 
   while (true) {
     dma_channel_configure(dma_b, &dmc_b, (volatile void *)&(pio->txf[sm]),
-                          (const volatile void *)data, 12500, false);
+                          (const volatile void *)data, SIZE / 4, false);
     dma_channel_wait_for_finish_blocking(dma_a);
     dma_channel_configure(dma_a, &dmc_a, (volatile void *)&(pio->txf[sm]),
-                          (const volatile void *)data, 12500, false);
+                          (const volatile void *)data, SIZE / 4, false);
     dma_channel_wait_for_finish_blocking(dma_b);
   }
 }
