@@ -26,8 +26,12 @@ int main() {
 
   uint8_t data[SIZE];
 
-  for (int j = 0; j < SIZE; j++) {
+  for (int j = 0; j < 125; j++) {
     data[j] = 127 + 128 * sin(2 * M_PI * j / 125.);
+  }
+
+  for (int j = 1; j < (SIZE / 125); j++) {
+    memcpy(data + 125 * j, data, 125);
   }
 
   printf("Init\n");
