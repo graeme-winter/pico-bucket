@@ -16,7 +16,7 @@
 void ep0_in_handler(uint8_t *buf, uint16_t len);
 void ep0_out_handler(uint8_t *buf, uint16_t len);
 void ep1_out_handler(uint8_t *buf, uint16_t len);
-void ep2_in_handler(uint8_t *buf, uint16_t len);
+void ep2_out_handler(uint8_t *buf, uint16_t len);
 
 static bool should_set_address = false;
 static uint8_t dev_addr = 0;
@@ -56,8 +56,8 @@ static struct usb_device_configuration dev_config = {
                       .data_buffer = &usb_dpram->epx_data[0 * 64],
                   },
                   {
-                      .descriptor = &ep2_in,
-                      .handler = &ep2_in_handler,
+                      .descriptor = &ep2_out,
+                      .handler = &ep2_out_handler,
                       .endpoint_control = &usb_dpram->ep_ctrl[1].in,
                       .buffer_control = &usb_dpram->ep_buf_ctrl[2].in,
                       // Second free EPX buffer
@@ -367,18 +367,21 @@ void ep0_in_handler(uint8_t *buf, uint16_t len) {
 void ep0_out_handler(uint8_t *buf, uint16_t len) { ; }
 
 void ep1_out_handler(uint8_t *buf, uint16_t len) {
-  printf("RX %d bytes from host\n", len);
+  printf("RX %d bytes from host on control\n", len);
   struct usb_endpoint_configuration *ep =
-      usb_get_endpoint_configuration(EP2_IN_ADDR);
-  for (int pin = 11; pin < 14; pin++) {
-    gpio_put(pin, (1 << (pin - 11)) & buf[0]);
-  }
-  usb_start_transfer(ep, buf, len);
+      usb_get_endpoint_configuration(EP1_OUT_ADDR);
+  uint32_t val = ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
+  ep->next_pid ^= 1u;
+  *ep->buffer_control = val;
 }
 
-void ep2_in_handler(uint8_t *buf, uint16_t len) {
-  printf("Sent %d bytes to host\n", len);
-  usb_start_transfer(usb_get_endpoint_configuration(EP1_OUT_ADDR), NULL, 64);
+void ep2_out_handler(uint8_t *buf, uint16_t len) {
+  printf("RX %d bytes from host on data\n", len);
+  struct usb_endpoint_configuration *ep =
+      usb_get_endpoint_configuration(EP2_OUT_ADDR);
+  uint32_t val = ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
+  ep->next_pid ^= 1u;
+  *ep->buffer_control = val;
 }
 
 int main(void) {

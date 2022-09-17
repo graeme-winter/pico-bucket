@@ -26,14 +26,17 @@ struct usb_device_configuration {
 
 #define EP0_IN_ADDR (USB_DIR_IN | 0)
 #define EP0_OUT_ADDR (USB_DIR_OUT | 0)
+
+// control channel
 #define EP1_OUT_ADDR (USB_DIR_OUT | 1)
-#define EP2_IN_ADDR (USB_DIR_IN | 2)
+
+// data channel
+#define EP2_OUT_ADDR (USB_DIR_OUT | 2)
 
 static const struct usb_endpoint_descriptor ep0_out = {
     .bLength = sizeof(struct usb_endpoint_descriptor),
     .bDescriptorType = USB_DT_ENDPOINT,
-    .bEndpointAddress =
-        EP0_OUT_ADDR, // EP number 0, OUT from host (rx to device)
+    .bEndpointAddress = EP0_OUT_ADDR,
     .bmAttributes = USB_TRANSFER_TYPE_CONTROL,
     .wMaxPacketSize = 64,
     .bInterval = 0};
@@ -41,8 +44,7 @@ static const struct usb_endpoint_descriptor ep0_out = {
 static const struct usb_endpoint_descriptor ep0_in = {
     .bLength = sizeof(struct usb_endpoint_descriptor),
     .bDescriptorType = USB_DT_ENDPOINT,
-    .bEndpointAddress =
-        EP0_IN_ADDR, // EP number 0, OUT from host (rx to device)
+    .bEndpointAddress = EP0_IN_ADDR,
     .bmAttributes = USB_TRANSFER_TYPE_CONTROL,
     .wMaxPacketSize = 64,
     .bInterval = 0};
@@ -78,17 +80,15 @@ static const struct usb_interface_descriptor interface_descriptor = {
 static const struct usb_endpoint_descriptor ep1_out = {
     .bLength = sizeof(struct usb_endpoint_descriptor),
     .bDescriptorType = USB_DT_ENDPOINT,
-    .bEndpointAddress =
-        EP1_OUT_ADDR, // EP number 1, OUT from host (rx to device)
+    .bEndpointAddress = EP1_OUT_ADDR,
     .bmAttributes = USB_TRANSFER_TYPE_BULK,
     .wMaxPacketSize = 64,
     .bInterval = 0};
 
-static const struct usb_endpoint_descriptor ep2_in = {
+static const struct usb_endpoint_descriptor ep2_out = {
     .bLength = sizeof(struct usb_endpoint_descriptor),
     .bDescriptorType = USB_DT_ENDPOINT,
-    .bEndpointAddress =
-        EP2_IN_ADDR, // EP number 2, IN from host (tx from device)
+    .bEndpointAddress = EP2_OUT_ADDR,
     .bmAttributes = USB_TRANSFER_TYPE_BULK,
     .wMaxPacketSize = 64,
     .bInterval = 0};
@@ -97,7 +97,7 @@ static const struct usb_configuration_descriptor config_descriptor = {
     .bLength = sizeof(struct usb_configuration_descriptor),
     .bDescriptorType = USB_DT_CONFIG,
     .wTotalLength = (sizeof(config_descriptor) + sizeof(interface_descriptor) +
-                     sizeof(ep1_out) + sizeof(ep2_in)),
+                     sizeof(ep1_out) + sizeof(ep2_out)),
     .bNumInterfaces = 1,
     .bConfigurationValue = 1, // Configuration 1
     .iConfiguration = 0,      // No string
@@ -112,8 +112,7 @@ static const unsigned char lang_descriptor[] = {
 };
 
 static const unsigned char *descriptor_strings[] = {
-    (unsigned char *) "Winter special project inc.",
-    (unsigned char *) "USB Doohicky"
-};
+    (unsigned char *)"Winter special project inc.",
+    (unsigned char *)"USB Doohicky"};
 
 #endif
