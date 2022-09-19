@@ -39,6 +39,6 @@ print(outep)
 
 assert outep is not None
 
-for j in range(2):
-    setting = "A"
+for j in range(100):
+    setting = "ABCD"
     outep[j % 2].write(setting)

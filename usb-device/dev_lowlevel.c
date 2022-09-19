@@ -58,8 +58,8 @@ static struct usb_device_configuration dev_config = {
                   {
                       .descriptor = &ep2_out,
                       .handler = &ep2_out_handler,
-                      .endpoint_control = &usb_dpram->ep_ctrl[1].in,
-                      .buffer_control = &usb_dpram->ep_buf_ctrl[2].in,
+                      .endpoint_control = &usb_dpram->ep_ctrl[1].out,
+                      .buffer_control = &usb_dpram->ep_buf_ctrl[2].out,
                       // Second free EPX buffer
                       .data_buffer = &usb_dpram->epx_data[1 * 64],
                   }}};
@@ -232,6 +232,16 @@ void usb_acknowledge_out_request(void) {
   usb_start_transfer(usb_get_endpoint_configuration(EP0_IN_ADDR), NULL, 0);
 }
 
+void usb_acknowledge_out_request1(void) {
+  *usb_get_endpoint_configuration(EP1_OUT_ADDR)->buffer_control &= ~USB_BUF_CTRL_FULL;
+  usb_start_transfer(usb_get_endpoint_configuration(EP1_OUT_ADDR), NULL, 0);
+}
+
+void usb_acknowledge_out_request2(void) {
+  *usb_get_endpoint_configuration(EP2_OUT_ADDR)->buffer_control &= ~USB_BUF_CTRL_FULL;
+  usb_start_transfer(usb_get_endpoint_configuration(EP2_OUT_ADDR), NULL, 0);
+}
+
 void usb_set_device_address(volatile struct usb_setup_packet *pkt) {
   dev_addr = (pkt->wValue & 0xff);
   printf("Set address %d\r\n", dev_addr);
@@ -330,6 +340,8 @@ void isr_usbctrl(void) {
   uint32_t status = usb_hw->ints;
   uint32_t handled = 0;
 
+  printf("Call int %d\n", status);
+
   if (status & USB_INTS_SETUP_REQ_BITS) {
     handled |= USB_INTS_SETUP_REQ_BITS;
     usb_hw_clear->sie_status = USB_SIE_STATUS_SETUP_REC_BITS;
@@ -338,6 +350,7 @@ void isr_usbctrl(void) {
 
   if (status & USB_INTS_BUFF_STATUS_BITS) {
     handled |= USB_INTS_BUFF_STATUS_BITS;
+    printf("Buffer\n");
     usb_handle_buff_status();
   }
 
@@ -368,20 +381,12 @@ void ep0_out_handler(uint8_t *buf, uint16_t len) { ; }
 
 void ep1_out_handler(uint8_t *buf, uint16_t len) {
   printf("RX %d bytes from host on control\n", len);
-  struct usb_endpoint_configuration *ep =
-      usb_get_endpoint_configuration(EP1_OUT_ADDR);
-  uint32_t val = ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
-  ep->next_pid ^= 1u;
-  *ep->buffer_control = val;
+  usb_acknowledge_out_request1();
 }
 
 void ep2_out_handler(uint8_t *buf, uint16_t len) {
   printf("RX %d bytes from host on data\n", len);
-  struct usb_endpoint_configuration *ep =
-      usb_get_endpoint_configuration(EP2_OUT_ADDR);
-  uint32_t val = ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
-  ep->next_pid ^= 1u;
-  *ep->buffer_control = val;
+  usb_acknowledge_out_request2();
 }
 
 int main(void) {
@@ -400,7 +405,7 @@ int main(void) {
     tight_loop_contents();
   }
 
-  usb_start_transfer(usb_get_endpoint_configuration(EP1_OUT_ADDR), NULL, 64);
+  //usb_start_transfer(usb_get_endpoint_configuration(EP1_OUT_ADDR), NULL, 64);
 
   while (1) {
     tight_loop_contents();
