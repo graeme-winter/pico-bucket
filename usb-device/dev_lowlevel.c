@@ -233,7 +233,7 @@ void usb_acknowledge_out_request(void) {
 }
 
 void usb_acknowledge_out_request1(void) {
-  usb_endpoint_configuration ep = usb_get_endpoint_configuration(EP1_OUT_ADDR);
+  struct usb_endpoint_configuration *ep = usb_get_endpoint_configuration(EP1_OUT_ADDR);
   uint32_t val = USB_BUF_CTRL_AVAIL;
   val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
   *ep->buffer_control val;
@@ -241,7 +241,7 @@ void usb_acknowledge_out_request1(void) {
 }
 
 void usb_acknowledge_out_request2(void) {
-  usb_endpoint_configuration ep = usb_get_endpoint_configuration(EP2_OUT_ADDR);
+  struct usb_endpoint_configuration *ep = usb_get_endpoint_configuration(EP2_OUT_ADDR);
   uint32_t val = USB_BUF_CTRL_AVAIL;
   val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
   *ep->buffer_control val;
