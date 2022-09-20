@@ -233,13 +233,15 @@ void usb_acknowledge_out_request(void) {
 }
 
 void usb_acknowledge_out_request1(void) {
+  usb_get_endpoint_configuration(EP1_OUT_ADDR)->next_pid ^= 1u;
   *usb_get_endpoint_configuration(EP1_OUT_ADDR)->buffer_control &= ~USB_BUF_CTRL_FULL;
-  usb_start_transfer(usb_get_endpoint_configuration(EP1_OUT_ADDR), NULL, 0);
+  //usb_start_transfer(usb_get_endpoint_configuration(EP1_OUT_ADDR), NULL, 0);
 }
 
 void usb_acknowledge_out_request2(void) {
+  usb_get_endpoint_configuration(EP2_OUT_ADDR)->next_pid ^= 1u;
   *usb_get_endpoint_configuration(EP2_OUT_ADDR)->buffer_control &= ~USB_BUF_CTRL_FULL;
-  usb_start_transfer(usb_get_endpoint_configuration(EP2_OUT_ADDR), NULL, 0);
+  //usb_start_transfer(usb_get_endpoint_configuration(EP2_OUT_ADDR), NULL, 0);
 }
 
 void usb_set_device_address(volatile struct usb_setup_packet *pkt) {
