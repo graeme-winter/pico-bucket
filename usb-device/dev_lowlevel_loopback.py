@@ -10,7 +10,7 @@
 
 import usb.core
 import usb.util
-import sys
+import time
 
 # find our device
 dev = usb.core.find(idVendor=0x0000, idProduct=0x0001)
@@ -39,6 +39,9 @@ print(outep)
 
 assert outep is not None
 
+time.sleep(3)
+
 for j in range(100):
+    print(j)
     setting = "ABCD"
     outep[j % 2].write(setting)

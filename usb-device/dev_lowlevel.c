@@ -113,6 +113,7 @@ void usb_setup_endpoint(const struct usb_endpoint_configuration *ep) {
                  (ep->descriptor->bmAttributes << EP_CTRL_BUFFER_TYPE_LSB) |
                  dpram_offset;
   *ep->endpoint_control = reg;
+  *ep->buffer_control = USB_BUF_CTRL_AVAIL;
 }
 
 void usb_setup_endpoints() {
@@ -130,7 +131,6 @@ void usb_device_init() {
 
   memset(usb_dpram, 0, sizeof(*usb_dpram)); // <1>
 
-  irq_set_enabled(USBCTRL_IRQ, true);
 
   usb_hw->muxing = USB_USB_MUXING_TO_PHY_BITS | USB_USB_MUXING_SOFTCON_BITS;
 
@@ -138,13 +138,15 @@ void usb_device_init() {
       USB_USB_PWR_VBUS_DETECT_BITS | USB_USB_PWR_VBUS_DETECT_OVERRIDE_EN_BITS;
 
   usb_hw->main_ctrl = USB_MAIN_CTRL_CONTROLLER_EN_BITS;
-  usb_hw->sie_ctrl = USB_SIE_CTRL_EP0_INT_1BUF_BITS; // <2>
+  usb_hw->sie_ctrl =  USB_SIE_CTRL_EP0_INT_1BUF_BITS; // <2>
   usb_hw->inte = USB_INTS_BUFF_STATUS_BITS | USB_INTS_BUS_RESET_BITS |
                  USB_INTS_SETUP_REQ_BITS;
 
   usb_setup_endpoints();
 
   usb_hw_set->sie_ctrl = USB_SIE_CTRL_PULLUP_EN_BITS;
+
+  irq_set_enabled(USBCTRL_IRQ, true);
 }
 
 static inline bool ep_is_tx(struct usb_endpoint_configuration *ep) {
@@ -155,7 +157,7 @@ void usb_start_transfer(struct usb_endpoint_configuration *ep, uint8_t *buf,
                         uint16_t len) {
   assert(len <= 64);
 
-  printf("Start transfer of len %d on ep addr 0x%x\n", len,
+  printf("Start transfer of en %d on ep addr 0x%x\n", len,
          ep->descriptor->bEndpointAddress);
 
   uint32_t val = len | USB_BUF_CTRL_AVAIL;
@@ -330,7 +332,7 @@ static void usb_handle_buff_done(uint ep_num, bool in) {
 static void usb_handle_buff_status() {
   uint32_t buffers = usb_hw->buf_status;
   uint32_t remaining_buffers = buffers;
-
+  printf("Remaining buffers %b\n", buffers);
   uint bit = 1u;
   for (uint i = 0; remaining_buffers && i < USB_NUM_ENDPOINTS * 2; i++) {
     if (remaining_buffers & bit) {
@@ -388,10 +390,16 @@ void ep0_out_handler(uint8_t *buf, uint16_t len) { ; }
 void ep1_out_handler(uint8_t *buf, uint16_t len) {
   printf("RX %d bytes from host on control\n", len);
   usb_acknowledge_out_request1();
+  //struct usb_endpoint_configuration *ep =
+  //  usb_get_endpoint_configuration(EP1_OUT_ADDR);
+  //usb_start_transfer(ep, buf, len);
 }
 
 void ep2_out_handler(uint8_t *buf, uint16_t len) {
   printf("RX %d bytes from host on data\n", len);
+  //struct usb_endpoint_configuration *ep =
+  //  usb_get_endpoint_configuration(EP2_OUT_ADDR);
+  //usb_start_transfer(ep, buf, len);
   usb_acknowledge_out_request2();
 }
 
