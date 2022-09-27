@@ -115,6 +115,8 @@ void usb_setup_endpoint(struct usb_endpoint_configuration *ep) {
                  (ep->descriptor->bmAttributes << EP_CTRL_BUFFER_TYPE_LSB) |
                  dpram_offset;
   *ep->endpoint_control = reg;
+
+  // critical - buffer is available, selected, has 64 bytes free
   *ep->buffer_control = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
   ep->next_pid = 1u;
 }
@@ -355,13 +357,17 @@ void ep0_out_handler(uint8_t *buf, uint16_t len) { ; }
 
 void ep1_out_handler(uint8_t *buf, uint16_t len) {
   uint32_t total = 0;
-  for (uint8_t * p = (uint8_t *) data; p < ptr; p++) {
+  for (uint8_t *p = (uint8_t *)data; p < ptr; p++) {
     total += *p;
   }
   ptr = data;
   printf("TOTAL %d: %d\n", ++ctr, total);
   struct usb_endpoint_configuration *ep =
       usb_get_endpoint_configuration(EP1_OUT_ADDR);
+
+  // critical - buffer is available, selected, has 64 bytes free
+  // next_pid is a local thing to see which was the last, to switch to next
+  // one being expected, could probably pick this up from existing register
   uint32_t val = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
   val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
   *ep->buffer_control = val;
@@ -369,10 +375,14 @@ void ep1_out_handler(uint8_t *buf, uint16_t len) {
 }
 
 void ep2_out_handler(uint8_t *buf, uint16_t len) {
-  memcpy((void *) ptr, buf, len);
+  memcpy((void *)ptr, buf, len);
   ptr += len;
   struct usb_endpoint_configuration *ep =
       usb_get_endpoint_configuration(EP2_OUT_ADDR);
+
+  // critical - buffer is available, selected, has 64 bytes free
+  // next_pid is a local thing to see which was the last, to switch to next
+  // one being expected, could probably pick this up from existing register
   uint32_t val = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
   val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
   *ep->buffer_control = val;
