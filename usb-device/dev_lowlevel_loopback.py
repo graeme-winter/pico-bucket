@@ -1,27 +1,14 @@
-#!/usr/bin/env python3
-
-#
-# Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
-#
-# SPDX-License-Identifier: BSD-3-Clause
-#
-
 # sudo pip3 install pyusb
 
 import usb.core
 import usb.util
+import string
 import time
 
-# find our device
 dev = usb.core.find(idVendor=0x0000, idProduct=0x0001)
-
-#print(dev)
-
-# was it found?
 if dev is None:
     raise ValueError("Device not found")
 
-# get an endpoint instance
 cfg = dev.get_active_configuration()
 intf = cfg[(0, 0)]
 
@@ -34,11 +21,13 @@ outep = tuple(
     )
 )
 
-print("******" * 10)
-print(outep)
-
 assert outep is not None
 
-for j in range(1024):
-    setting = "MESSAGE %d" % j
+blob = 10 * (string.ascii_lowercase + string.ascii_uppercase)
+
+t0 = time.time()
+for j in range(1000):
+    setting = blob + "MESSAGE %d" % j
     print(j, outep[j % 2].write(setting))
+t1 = time.time()
+print(t1 - t0)
