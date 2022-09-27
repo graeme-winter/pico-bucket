@@ -101,8 +101,6 @@ static inline uint32_t usb_buffer_offset(volatile uint8_t *buf) {
 }
 
 void usb_setup_endpoint(struct usb_endpoint_configuration *ep) {
-  printf("Set up endpoint 0x%x with buffer address 0x%p\n",
-         ep->descriptor->bEndpointAddress, ep->data_buffer);
 
   if (!ep->endpoint_control) {
     return;
@@ -157,9 +155,6 @@ static inline bool ep_is_tx(struct usb_endpoint_configuration *ep) {
 void usb_start_transfer(struct usb_endpoint_configuration *ep, uint8_t *buf,
                         uint16_t len) {
   assert(len <= 64);
-
-  printf("Start transfer of en %d on ep addr 0x%x\n", len,
-         ep->descriptor->bEndpointAddress);
 
   uint32_t val = len | USB_BUF_CTRL_AVAIL;
 
@@ -253,13 +248,11 @@ void usb_acknowledge_out_request2(void) {
 
 void usb_set_device_address(volatile struct usb_setup_packet *pkt) {
   dev_addr = (pkt->wValue & 0xff);
-  printf("Set address %d\r\n", dev_addr);
   should_set_address = true;
   usb_acknowledge_out_request();
 }
 
 void usb_set_device_configuration(volatile struct usb_setup_packet *pkt) {
-  printf("Device Enumerated\r\n");
   usb_acknowledge_out_request();
   configured = true;
 }
@@ -279,7 +272,6 @@ void usb_handle_setup_packet(void) {
       usb_set_device_configuration(pkt);
     } else {
       usb_acknowledge_out_request();
-      printf("Other OUT request (0x%x)\r\n", pkt->bRequest);
     }
   } else if (req_direction == USB_DIR_IN) {
     if (req == USB_REQUEST_GET_DESCRIPTOR) {
@@ -288,24 +280,17 @@ void usb_handle_setup_packet(void) {
       switch (descriptor_type) {
       case USB_DT_DEVICE:
         usb_handle_device_descriptor();
-        printf("GET DEVICE DESCRIPTOR\r\n");
         break;
 
       case USB_DT_CONFIG:
         usb_handle_config_descriptor(pkt);
-        printf("GET CONFIG DESCRIPTOR\r\n");
         break;
 
       case USB_DT_STRING:
         usb_handle_string_descriptor(pkt);
-        printf("GET STRING DESCRIPTOR\r\n");
         break;
 
-      default:
-        printf("Unhandled GET_DESCRIPTOR type 0x%x\r\n", descriptor_type);
       }
-    } else {
-      printf("Other IN request (0x%x)\r\n", pkt->bRequest);
     }
   }
 }
@@ -318,12 +303,10 @@ static void usb_handle_ep_buff_done(struct usb_endpoint_configuration *ep) {
 
 static void usb_handle_buff_done(uint ep_num, bool in) {
   uint8_t ep_addr = ep_num | (in ? USB_DIR_IN : 0);
-  printf("EP %d (in = %d) done\n", ep_num, in);
   for (uint i = 0; i < USB_NUM_ENDPOINTS; i++) {
     struct usb_endpoint_configuration *ep = &dev_config.endpoints[i];
     if (ep->descriptor && ep->handler) {
       if (ep->descriptor->bEndpointAddress == ep_addr) {
-        printf("EP %d bits -> %032b\n", ep_addr, *ep->buffer_control);
         usb_handle_ep_buff_done(ep);
         return;
       }
@@ -334,7 +317,6 @@ static void usb_handle_buff_done(uint ep_num, bool in) {
 static void usb_handle_buff_status() {
   uint32_t buffers = usb_hw->buf_status;
   uint32_t remaining_buffers = buffers;
-  printf("Remaining buffers %b\n", buffers);
   uint bit = 1u;
   for (uint i = 0; remaining_buffers && i < USB_NUM_ENDPOINTS * 2; i++) {
     if (remaining_buffers & bit) {
@@ -403,21 +385,11 @@ void ep2_out_handler(uint8_t *buf, uint16_t len) {
 
 int main(void) {
   stdio_init_all();
-  printf("USB Device to control traffic lights\n");
   usb_device_init();
-
-  // set up GPIO
-  for (int pin = 11; pin < 14; pin++) {
-    gpio_init(pin);
-    gpio_set_dir(pin, GPIO_OUT);
-    gpio_put(pin, false);
-  }
 
   while (!configured) {
     tight_loop_contents();
   }
-
-  //usb_start_transfer(usb_get_endpoint_configuration(EP1_OUT_ADDR), NULL, 64);
 
   while (1) {
     tight_loop_contents();
