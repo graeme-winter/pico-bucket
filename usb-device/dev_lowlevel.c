@@ -24,6 +24,10 @@ static volatile bool configured = false;
 
 static uint8_t ep0_buf[64];
 
+volatile uint8_t data[200000];
+volatile uint8_t *ptr = data;
+volatile uint32_t ctr = 0;
+
 static struct usb_device_configuration dev_config = {
     .device_descriptor = &device_descriptor,
     .interface_descriptor = &interface_descriptor,
@@ -229,24 +233,6 @@ void usb_acknowledge_out_request(void) {
   usb_start_transfer(usb_get_endpoint_configuration(EP0_IN_ADDR), NULL, 0);
 }
 
-void usb_acknowledge_out_request1(void) {
-  struct usb_endpoint_configuration *ep =
-      usb_get_endpoint_configuration(EP1_OUT_ADDR);
-  uint32_t val = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
-  val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
-  *ep->buffer_control = val;
-  ep->next_pid ^= 1u;
-}
-
-void usb_acknowledge_out_request2(void) {
-  struct usb_endpoint_configuration *ep =
-      usb_get_endpoint_configuration(EP2_OUT_ADDR);
-  uint32_t val = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
-  val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
-  *ep->buffer_control = val;
-  ep->next_pid ^= 1u;
-}
-
 void usb_set_device_address(volatile struct usb_setup_packet *pkt) {
   dev_addr = (pkt->wValue & 0xff);
   should_set_address = true;
@@ -368,19 +354,29 @@ void ep0_in_handler(uint8_t *buf, uint16_t len) {
 void ep0_out_handler(uint8_t *buf, uint16_t len) { ; }
 
 void ep1_out_handler(uint8_t *buf, uint16_t len) {
-  uint8_t buffer[80];
-  memcpy(buffer, buf, len);
-  buffer[len] = 0;
-  printf("CTRL: %d/%s\n", len, buffer);
-  usb_acknowledge_out_request1();
+  uint32_t total = 0;
+  for (uint8_t * p = (uint8_t *) data; p < ptr; p++) {
+    total += *p;
+  }
+  ptr = data;
+  printf("TOTAL %d: %d\n", ++ctr, total);
+  struct usb_endpoint_configuration *ep =
+      usb_get_endpoint_configuration(EP1_OUT_ADDR);
+  uint32_t val = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
+  val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
+  *ep->buffer_control = val;
+  ep->next_pid ^= 1u;
 }
 
 void ep2_out_handler(uint8_t *buf, uint16_t len) {
-  uint8_t buffer[80];
-  memcpy(buffer, buf, len);
-  buffer[len] = 0;
-  printf("DATA: %d/%s\n", len, buffer);
-  usb_acknowledge_out_request2();
+  memcpy((void *) ptr, buf, len);
+  ptr += len;
+  struct usb_endpoint_configuration *ep =
+      usb_get_endpoint_configuration(EP2_OUT_ADDR);
+  uint32_t val = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
+  val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
+  *ep->buffer_control = val;
+  ep->next_pid ^= 1u;
 }
 
 int main(void) {

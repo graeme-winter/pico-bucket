@@ -23,11 +23,11 @@ outep = tuple(
 
 assert outep is not None
 
-blob = 10 * (string.ascii_lowercase + string.ascii_uppercase)
+blob = bytearray([x % 256 for x in range(0x10000)])
 
 t0 = time.time()
-for j in range(1000):
-    setting = blob + "MESSAGE %d" % j
-    print(j, outep[j % 2].write(setting))
+for j in range(0x100):
+    outep[0].write("")
+    outep[1].write(blob)
 t1 = time.time()
-print(t1 - t0)
+print("%.1f bytes / s" % ((0x10000 * 0x100) / (t1 - t0)))
