@@ -130,14 +130,13 @@ void usb_device_init() {
 
   memset(usb_dpram, 0, sizeof(*usb_dpram)); // <1>
 
-
   usb_hw->muxing = USB_USB_MUXING_TO_PHY_BITS | USB_USB_MUXING_SOFTCON_BITS;
 
   usb_hw->pwr =
       USB_USB_PWR_VBUS_DETECT_BITS | USB_USB_PWR_VBUS_DETECT_OVERRIDE_EN_BITS;
 
   usb_hw->main_ctrl = USB_MAIN_CTRL_CONTROLLER_EN_BITS;
-  usb_hw->sie_ctrl =  USB_SIE_CTRL_EP0_INT_1BUF_BITS; // <2>
+  usb_hw->sie_ctrl = USB_SIE_CTRL_EP0_INT_1BUF_BITS; // <2>
   usb_hw->inte = USB_INTS_BUFF_STATUS_BITS | USB_INTS_BUS_RESET_BITS |
                  USB_INTS_SETUP_REQ_BITS;
 
@@ -231,7 +230,8 @@ void usb_acknowledge_out_request(void) {
 }
 
 void usb_acknowledge_out_request1(void) {
-  struct usb_endpoint_configuration *ep = usb_get_endpoint_configuration(EP1_OUT_ADDR);
+  struct usb_endpoint_configuration *ep =
+      usb_get_endpoint_configuration(EP1_OUT_ADDR);
   uint32_t val = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
   val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
   *ep->buffer_control = val;
@@ -239,7 +239,8 @@ void usb_acknowledge_out_request1(void) {
 }
 
 void usb_acknowledge_out_request2(void) {
-  struct usb_endpoint_configuration *ep = usb_get_endpoint_configuration(EP2_OUT_ADDR);
+  struct usb_endpoint_configuration *ep =
+      usb_get_endpoint_configuration(EP2_OUT_ADDR);
   uint32_t val = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
   val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
   *ep->buffer_control = val;
@@ -289,7 +290,6 @@ void usb_handle_setup_packet(void) {
       case USB_DT_STRING:
         usb_handle_string_descriptor(pkt);
         break;
-
       }
     }
   }
@@ -371,7 +371,7 @@ void ep1_out_handler(uint8_t *buf, uint16_t len) {
   uint8_t buffer[80];
   memcpy(buffer, buf, len);
   buffer[len] = 0;
-  printf("CTRL: %d/%s\n", len, buffer);  
+  printf("CTRL: %d/%s\n", len, buffer);
   usb_acknowledge_out_request1();
 }
 
