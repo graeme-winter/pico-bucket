@@ -15,7 +15,7 @@ import time
 # find our device
 dev = usb.core.find(idVendor=0x0000, idProduct=0x0001)
 
-print(dev)
+#print(dev)
 
 # was it found?
 if dev is None:
@@ -39,9 +39,6 @@ print(outep)
 
 assert outep is not None
 
-time.sleep(3)
-
-for j in range(100):
-    print(j)
-    setting = "ABCD"
-    outep[j % 2].write(setting)
+for j in range(1024):
+    setting = "MESSAGE %d" % j
+    print(j, outep[j % 2].write(setting))
