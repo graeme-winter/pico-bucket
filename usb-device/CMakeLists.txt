@@ -11,7 +11,7 @@ project(usbd C CXX ASM)
 
 pico_sdk_init()
 
-add_executable(usbd dev_lowlevel.c)
+add_executable(usbd usbd.c)
 
 pico_set_program_name(usbd "usbd")
 pico_set_program_version(usbd "0.1")

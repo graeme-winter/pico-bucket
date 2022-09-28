@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "dev_lowlevel.h"
+#include "usbd.h"
 
 #define usb_hw_set hw_set_alias(usb_hw)
 #define usb_hw_clear hw_clear_alias(usb_hw)
