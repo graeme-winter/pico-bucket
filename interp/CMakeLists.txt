@@ -21,7 +21,7 @@ pico_enable_stdio_usb(interp 0)
 
 target_link_libraries(interp pico_stdlib)
 
-target_link_libraries(interp hardware_interp hardware_dma)
+target_link_libraries(interp hardware_interp)
 
 pico_add_extra_outputs(interp)
 
