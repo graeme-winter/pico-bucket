@@ -17,6 +17,23 @@ Control endpoint consists of two main registers - one to set the device up and o
 
 Go / stop needs to trigger both the external clock and the signal pump at the same instant: will need to also (and this is important) reset the DMA etc..
 
+Messages 1: control frequency:
+
+`0x00000000 uint32_t cpu_freq uint16_t div_int uint8_t div_frc uint8_t 0`
+
+Defaults to 125 MhZ / 1 / 0 i.e. PIO output at 125,000,000 samples / s.
+
+Message 2: control high / low / #points
+
+`0x00000001 uint32_t high uint32_t low uint32_t npoints`
+
+Message 3: start / stop
+
+`0xffff0000 stop`
+`0xffffffff start`
+
 ### Data Endpoint
 
-API here is very simple: first four bytes are offset, remaining bytes are signal. Offset will be modulo 200,000 to prevent buffer overflow.
+API here is very simple: first four bytes are offset, remaining bytes are signal. Offset will be modulo 200,000 to prevent buffer overflow. `nn` must be a multimple of four for the DMA to work correctly.
+
+`uint32_t offset uint8_t signal[nn]`
