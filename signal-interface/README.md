@@ -32,8 +32,16 @@ Message 3: start / stop
 `0xffff0000 stop`
 `0xffffffff start`
 
+### Control Endpoint (2)
+
+Could also allow messages of the form `XSIN` or `XSQR` for e.g. square wave, sine wave etc. (saw springs to mind as well). These would then take amplitude, phase offset, period in counts and write internally to the signal buffer. In principle could also implement `READ` or similar which would grab from the ADC at a clocked interval and write to allow reproduction of an incoming signal.
+
 ### Data Endpoint
 
 API here is very simple: first four bytes are offset, remaining bytes are signal. Offset will be modulo 200,000 to prevent buffer overflow. `nn` must be a multimple of four for the DMA to work correctly.
 
 `uint32_t offset uint8_t signal[nn]`
+
+### Readback Endpoint
+
+Internally maintain a read pointer which is set between 0 and npoints abvove, and allow reading of the signal from this. Useful to fetch back a computed signal from `XSIN` etc. so verification is possible.
