@@ -4,7 +4,7 @@ Mock up of USB interafce to pico-signal-generator.
 
 ## API
 
-Two parts to the API - control and data: control allows setting of the frequency, clock etc. while the data end point allows pushing of the bytes to output. N.B. in practice full signal frequencies greatere than ~ 100 kHz are measurably attenuated by the capacitance of current implementation. All words are little endian.
+Three parts to the API - control and data: control allows setting of the frequency, clock etc. while the data in / out end points allow pushing of the bytes to output or reading the signal back. N.B. in practice full signal frequencies greatere than ~ 100 kHz are measurably attenuated by the capacitance of current implementation. All words are little endian.
 
 ### Control Endpoint
 
@@ -21,7 +21,7 @@ Messages 1: control frequency:
 
 `0x00000000 uint32_t cpu_freq uint16_t div_int uint8_t div_frc uint8_t 0`
 
-Defaults to 125 MhZ / 1 / 0 i.e. PIO output at 125,000,000 samples / s.
+Defaults to 125 MHz / 1 / 0 i.e. PIO output at 125,000,000 samples / s.
 
 Message 2: control high / low / #points
 
