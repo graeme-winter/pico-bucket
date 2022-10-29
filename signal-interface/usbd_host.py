@@ -6,6 +6,9 @@ import string
 import time
 
 dev = usb.core.find(idVendor=0x0000, idProduct=0x0001)
+
+print(dev)
+
 if dev is None:
     raise ValueError("Device not found")
 
@@ -26,8 +29,8 @@ assert outep is not None
 blob = bytearray([x % 256 for x in range(0x10000)])
 
 t0 = time.time()
-for j in range(0x100):
+for j in range(0x10):
     outep[0].write("")
     outep[1].write(blob)
 t1 = time.time()
-print("%.1f bytes / s" % ((0x10000 * 0x100) / (t1 - t0)))
+print("%.1f bytes / s" % ((0x10000 * 0x10) / (t1 - t0)))

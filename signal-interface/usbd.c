@@ -17,7 +17,7 @@ void ep0_in_handler(uint8_t *buf, uint16_t len);
 void ep0_out_handler(uint8_t *buf, uint16_t len);
 void ep1_out_handler(uint8_t *buf, uint16_t len);
 void ep2_out_handler(uint8_t *buf, uint16_t len);
-void ep3_in_handler(uint8_t *buf, uint16_t len);
+void ep3_out_handler(uint8_t *buf, uint16_t len);
 
 static bool should_set_address = false;
 static uint8_t dev_addr = 0;
@@ -38,9 +38,8 @@ static struct usb_device_configuration dev_config = {
     .endpoints = {{
                       .descriptor = &ep0_out,
                       .handler = &ep0_out_handler,
-                      .endpoint_control = NULL, // NA for EP0
+                      .endpoint_control = NULL,
                       .buffer_control = &usb_dpram->ep_buf_ctrl[0].out,
-                      // EP0 in and out share a data buffer
                       .data_buffer = &usb_dpram->ep0_buf_a[0],
                   },
                   {
@@ -65,10 +64,10 @@ static struct usb_device_configuration dev_config = {
                       .data_buffer = &usb_dpram->epx_data[1 * 64],
                   },
                   {
-                      .descriptor = &ep3_in,
-                      .handler = &ep3_in_handler,
-                      .endpoint_control = &usb_dpram->ep_ctrl[2].out,
-                      .buffer_control = &usb_dpram->ep_buf_ctrl[3].out,
+                      .descriptor = &ep3_out,
+                      .handler = &ep3_out_handler,
+                      .endpoint_control = &usb_dpram->ep_ctrl[1].in,
+                      .buffer_control = &usb_dpram->ep_buf_ctrl[2].in,
                       .data_buffer = &usb_dpram->epx_data[2 * 64],
                   }}};
 
@@ -120,8 +119,9 @@ void usb_setup_endpoint(struct usb_endpoint_configuration *ep) {
                  dpram_offset;
   *ep->endpoint_control = reg;
 
-  // critical - buffer is available, selected, has 64 bytes free
+  // critical - buffer is available, selected, has 64 bytes free if RX
   *ep->buffer_control = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
+
   ep->next_pid = 1u;
 }
 
@@ -140,6 +140,8 @@ void usb_device_init() {
 
   memset(usb_dpram, 0, sizeof(*usb_dpram)); // <1>
 
+  printf("init 0\n");
+
   usb_hw->muxing = USB_USB_MUXING_TO_PHY_BITS | USB_USB_MUXING_SOFTCON_BITS;
 
   usb_hw->pwr =
@@ -150,11 +152,14 @@ void usb_device_init() {
   usb_hw->inte = USB_INTS_BUFF_STATUS_BITS | USB_INTS_BUS_RESET_BITS |
                  USB_INTS_SETUP_REQ_BITS;
 
+  printf("init 1\n");
   usb_setup_endpoints();
 
+  printf("init 2\n");
   usb_hw_set->sie_ctrl = USB_SIE_CTRL_PULLUP_EN_BITS;
 
   irq_set_enabled(USBCTRL_IRQ, true);
+  printf("init 3\n");
 }
 
 static inline bool ep_is_tx(struct usb_endpoint_configuration *ep) {
@@ -179,6 +184,7 @@ void usb_start_transfer(struct usb_endpoint_configuration *ep, uint8_t *buf,
 }
 
 void usb_handle_device_descriptor(void) {
+  printf("init desc\n");
   const struct usb_device_descriptor *d = dev_config.device_descriptor;
   struct usb_endpoint_configuration *ep =
       usb_get_endpoint_configuration(EP0_IN_ADDR);
@@ -189,6 +195,7 @@ void usb_handle_device_descriptor(void) {
 void usb_handle_config_descriptor(volatile struct usb_setup_packet *pkt) {
   uint8_t *buf = &ep0_buf[0];
 
+  printf("init conf\n");
   const struct usb_configuration_descriptor *d = dev_config.config_descriptor;
   memcpy((void *)buf, d, sizeof(struct usb_configuration_descriptor));
   buf += sizeof(struct usb_configuration_descriptor);
@@ -393,11 +400,16 @@ void ep2_out_handler(uint8_t *buf, uint16_t len) {
   ep->next_pid ^= 1u;
 }
 
-void ep3_in_handler(uint8_t *buf, uint16_t len) {
+void ep3_out_handler(uint8_t *buf, uint16_t len) {
+  memcpy((void *)ptr, buf, len);
+  ptr += len;
   struct usb_endpoint_configuration *ep =
-      usb_get_endpoint_configuration(EP3_IN_ADDR);
-  memcpy((void *)buf, (void *)ptr, len);
-  uint32_t val = USB_BUF_CTRL_FULL | USB_BUF_CTRL_SEL | len;
+      usb_get_endpoint_configuration(EP3_OUT_ADDR);
+
+  // critical - buffer is available, selected, has 64 bytes free
+  // next_pid is a local thing to see which was the last, to switch to next
+  // one being expected, could probably pick this up from existing register
+  uint32_t val = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
   val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
   *ep->buffer_control = val;
   ep->next_pid ^= 1u;

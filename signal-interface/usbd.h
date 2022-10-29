@@ -33,8 +33,8 @@ struct usb_device_configuration {
 // data channel out
 #define EP2_OUT_ADDR (USB_DIR_OUT | 2)
 
-// data channel back
-#define EP3_IN_ADDR (USB_DIR_IN | 2)
+// data channel back - once works
+#define EP3_OUT_ADDR (USB_DIR_OUT | 3)
 
 static const struct usb_endpoint_descriptor ep0_out = {
     .bLength = sizeof(struct usb_endpoint_descriptor),
@@ -74,11 +74,12 @@ static const struct usb_interface_descriptor interface_descriptor = {
     .bDescriptorType = USB_DT_INTERFACE,
     .bInterfaceNumber = 0,
     .bAlternateSetting = 0,
-    .bNumEndpoints = 2,      // Interface has 2 endpoints
+    .bNumEndpoints = 3,      // Interface has 2 endpoints
     .bInterfaceClass = 0xff, // Vendor specific endpoint
     .bInterfaceSubClass = 0,
     .bInterfaceProtocol = 0,
-    .iInterface = 0};
+    .iInterface = 0
+};
 
 static const struct usb_endpoint_descriptor ep1_out = {
     .bLength = sizeof(struct usb_endpoint_descriptor),
@@ -86,7 +87,8 @@ static const struct usb_endpoint_descriptor ep1_out = {
     .bEndpointAddress = EP1_OUT_ADDR,
     .bmAttributes = USB_TRANSFER_TYPE_BULK,
     .wMaxPacketSize = 64,
-    .bInterval = 0};
+    .bInterval = 0
+};
 
 static const struct usb_endpoint_descriptor ep2_out = {
     .bLength = sizeof(struct usb_endpoint_descriptor),
@@ -94,21 +96,23 @@ static const struct usb_endpoint_descriptor ep2_out = {
     .bEndpointAddress = EP2_OUT_ADDR,
     .bmAttributes = USB_TRANSFER_TYPE_BULK,
     .wMaxPacketSize = 64,
-    .bInterval = 0};
+    .bInterval = 0
+};
 
-static const struct usb_endpoint_descriptor ep3_in = {
+static const struct usb_endpoint_descriptor ep3_out = {
     .bLength = sizeof(struct usb_endpoint_descriptor),
     .bDescriptorType = USB_DT_ENDPOINT,
-    .bEndpointAddress = EP3_IN_ADDR,
+    .bEndpointAddress = EP3_OUT_ADDR,
     .bmAttributes = USB_TRANSFER_TYPE_BULK,
     .wMaxPacketSize = 64,
-    .bInterval = 0};
+    .bInterval = 0
+};
 
 static const struct usb_configuration_descriptor config_descriptor = {
     .bLength = sizeof(struct usb_configuration_descriptor),
     .bDescriptorType = USB_DT_CONFIG,
     .wTotalLength = (sizeof(config_descriptor) + sizeof(interface_descriptor) +
-                     sizeof(ep1_out) + sizeof(ep2_out)),
+                     sizeof(ep1_out) + sizeof(ep2_out) + sizeof(ep3_out)),
     .bNumInterfaces = 1,
     .bConfigurationValue = 1, // Configuration 1
     .iConfiguration = 0,      // No string
