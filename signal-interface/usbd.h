@@ -31,7 +31,7 @@ struct usb_device_configuration {
 #define EP1_OUT_ADDR (USB_DIR_OUT | 1)
 
 // data channel out
-#define EP2_OUT_ADDR (USB_DIR_OUT | 2)
+#define EP2_OUT_ADDR (USB_DIR_IN | 2)
 
 // data channel back - once works
 #define EP2_IN_ADDR (USB_DIR_OUT | 2)
