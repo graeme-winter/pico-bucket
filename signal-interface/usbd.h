@@ -34,7 +34,7 @@ struct usb_device_configuration {
 #define EP2_OUT_ADDR (USB_DIR_OUT | 2)
 
 // data channel back - once works
-#define EP3_OUT_ADDR (USB_DIR_OUT | 3)
+#define EP2_IN_ADDR (USB_DIR_OUT | 2)
 
 static const struct usb_endpoint_descriptor ep0_out = {
     .bLength = sizeof(struct usb_endpoint_descriptor),
@@ -99,10 +99,10 @@ static const struct usb_endpoint_descriptor ep2_out = {
     .bInterval = 0
 };
 
-static const struct usb_endpoint_descriptor ep3_out = {
+static const struct usb_endpoint_descriptor ep2_in = {
     .bLength = sizeof(struct usb_endpoint_descriptor),
     .bDescriptorType = USB_DT_ENDPOINT,
-    .bEndpointAddress = EP3_OUT_ADDR,
+    .bEndpointAddress = EP2_IN_ADDR,
     .bmAttributes = USB_TRANSFER_TYPE_BULK,
     .wMaxPacketSize = 64,
     .bInterval = 0
@@ -112,7 +112,7 @@ static const struct usb_configuration_descriptor config_descriptor = {
     .bLength = sizeof(struct usb_configuration_descriptor),
     .bDescriptorType = USB_DT_CONFIG,
     .wTotalLength = (sizeof(config_descriptor) + sizeof(interface_descriptor) +
-                     sizeof(ep1_out) + sizeof(ep2_out) + sizeof(ep3_out)),
+                     sizeof(ep1_out) + sizeof(ep2_out) + sizeof(ep2_in)),
     .bNumInterfaces = 1,
     .bConfigurationValue = 1, // Configuration 1
     .iConfiguration = 0,      // No string

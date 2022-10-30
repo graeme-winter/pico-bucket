@@ -17,7 +17,7 @@ void ep0_in_handler(uint8_t *buf, uint16_t len);
 void ep0_out_handler(uint8_t *buf, uint16_t len);
 void ep1_out_handler(uint8_t *buf, uint16_t len);
 void ep2_out_handler(uint8_t *buf, uint16_t len);
-void ep3_out_handler(uint8_t *buf, uint16_t len);
+void ep2_in_handler(uint8_t *buf, uint16_t len);
 
 static bool should_set_address = false;
 static uint8_t dev_addr = 0;
@@ -64,8 +64,8 @@ static struct usb_device_configuration dev_config = {
                       .data_buffer = &usb_dpram->epx_data[1 * 64],
                   },
                   {
-                      .descriptor = &ep3_out,
-                      .handler = &ep3_out_handler,
+                      .descriptor = &ep2_in,
+                      .handler = &ep2_in_handler,
                       .endpoint_control = &usb_dpram->ep_ctrl[1].in,
                       .buffer_control = &usb_dpram->ep_buf_ctrl[2].in,
                       .data_buffer = &usb_dpram->epx_data[2 * 64],
@@ -400,16 +400,13 @@ void ep2_out_handler(uint8_t *buf, uint16_t len) {
   ep->next_pid ^= 1u;
 }
 
-void ep3_out_handler(uint8_t *buf, uint16_t len) {
-  memcpy((void *)ptr, buf, len);
+void ep2_in_handler(uint8_t *buf, uint16_t len) {
+  memcpy(buf, (void *)ptr, len);
   ptr += len;
   struct usb_endpoint_configuration *ep =
-      usb_get_endpoint_configuration(EP3_OUT_ADDR);
+      usb_get_endpoint_configuration(EP2_IN_ADDR);
 
-  // critical - buffer is available, selected, has 64 bytes free
-  // next_pid is a local thing to see which was the last, to switch to next
-  // one being expected, could probably pick this up from existing register
-  uint32_t val = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
+  uint32_t val = USB_BUF_CTRL_FULL | USB_BUF_CTRL_SEL | len;
   val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
   *ep->buffer_control = val;
   ep->next_pid ^= 1u;
