@@ -17,7 +17,7 @@ void ep0_in_handler(uint8_t *buf, uint16_t len);
 void ep0_out_handler(uint8_t *buf, uint16_t len);
 void ep1_out_handler(uint8_t *buf, uint16_t len);
 void ep2_out_handler(uint8_t *buf, uint16_t len);
-void ep2_in_handler(uint8_t *buf, uint16_t len);
+void ep3_in_handler(uint8_t *buf, uint16_t len);
 
 static bool should_set_address = false;
 static uint8_t dev_addr = 0;
@@ -64,10 +64,10 @@ static struct usb_device_configuration dev_config = {
                       .data_buffer = &usb_dpram->epx_data[1 * 64],
                   },
                   {
-                      .descriptor = &ep2_in,
-                      .handler = &ep2_in_handler,
-                      .endpoint_control = &usb_dpram->ep_ctrl[1].in,
-                      .buffer_control = &usb_dpram->ep_buf_ctrl[2].in,
+                      .descriptor = &ep3_in,
+                      .handler = &ep3_in_handler,
+                      .endpoint_control = &usb_dpram->ep_ctrl[2].in,
+                      .buffer_control = &usb_dpram->ep_buf_ctrl[3].in,
                       .data_buffer = &usb_dpram->epx_data[2 * 64],
                   }}};
 
@@ -107,6 +107,10 @@ static inline uint32_t usb_buffer_offset(volatile uint8_t *buf) {
   return (uint32_t)buf ^ (uint32_t)usb_dpram;
 }
 
+static inline bool ep_is_tx(struct usb_endpoint_configuration *ep) {
+  return ep->descriptor->bEndpointAddress & USB_DIR_IN;
+}
+
 void usb_setup_endpoint(struct usb_endpoint_configuration *ep) {
 
   if (!ep->endpoint_control) {
@@ -119,8 +123,12 @@ void usb_setup_endpoint(struct usb_endpoint_configuration *ep) {
                  dpram_offset;
   *ep->endpoint_control = reg;
 
-  // critical - buffer is available, selected, has 64 bytes free if RX
-  *ep->buffer_control = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
+  if (ep_is_tx(ep)) {
+    *ep->buffer_control = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 0;
+  } else {
+    // critical - buffer is available, selected, has 64 bytes free if RX
+    *ep->buffer_control = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
+  }
 
   ep->next_pid = 1u;
 }
@@ -160,10 +168,6 @@ void usb_device_init() {
 
   irq_set_enabled(USBCTRL_IRQ, true);
   printf("init 3\n");
-}
-
-static inline bool ep_is_tx(struct usb_endpoint_configuration *ep) {
-  return ep->descriptor->bEndpointAddress & USB_DIR_IN;
 }
 
 void usb_start_transfer(struct usb_endpoint_configuration *ep, uint8_t *buf,
@@ -400,11 +404,11 @@ void ep2_out_handler(uint8_t *buf, uint16_t len) {
   ep->next_pid ^= 1u;
 }
 
-void ep2_in_handler(uint8_t *buf, uint16_t len) {
+void ep3_in_handler(uint8_t *buf, uint16_t len) {
   memcpy(buf, (void *)ptr, len);
   ptr += len;
   struct usb_endpoint_configuration *ep =
-      usb_get_endpoint_configuration(EP2_IN_ADDR);
+      usb_get_endpoint_configuration(EP3_IN_ADDR);
 
   uint32_t val = USB_BUF_CTRL_FULL | USB_BUF_CTRL_SEL | len;
   val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;

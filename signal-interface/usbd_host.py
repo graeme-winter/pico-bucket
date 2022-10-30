@@ -24,6 +24,8 @@ outep = tuple(
     )
 )
 
+print(outep)
+
 assert outep is not None
 
 blob = bytearray([x % 256 for x in range(0x10000)])
