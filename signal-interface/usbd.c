@@ -124,13 +124,14 @@ void usb_setup_endpoint(struct usb_endpoint_configuration *ep) {
   *ep->endpoint_control = reg;
 
   if (ep_is_tx(ep)) {
-    *ep->buffer_control = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 0;
+    *ep->buffer_control = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
+    ep->next_pid= 1u;
   } else {
     // critical - buffer is available, selected, has 64 bytes free if RX
     *ep->buffer_control = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_SEL | 64;
+    ep->next_pid = 1u;
   }
 
-  ep->next_pid = 1u;
 }
 
 void usb_setup_endpoints() {
@@ -306,6 +307,7 @@ static void usb_handle_ep_buff_done(struct usb_endpoint_configuration *ep) {
 
 static void usb_handle_buff_done(uint ep_num, bool in) {
   uint8_t ep_addr = ep_num | (in ? USB_DIR_IN : 0);
+  printf("ep %x\n", ep_addr);
   for (uint i = 0; i < USB_NUM_ENDPOINTS; i++) {
     struct usb_endpoint_configuration *ep = &dev_config.endpoints[i];
     if (ep->descriptor && ep->handler) {
@@ -321,9 +323,11 @@ static void usb_handle_buff_status() {
   uint32_t buffers = usb_hw->buf_status;
   uint32_t remaining_buffers = buffers;
   uint bit = 1u;
+  printf("buf %d\n", buffers);
   for (uint i = 0; remaining_buffers && i < USB_NUM_ENDPOINTS * 2; i++) {
     if (remaining_buffers & bit) {
       usb_hw_clear->buf_status = bit;
+      printf("Calling for EP %d %d\n", i >> 1u, !(i & 1u));
       usb_handle_buff_done(i >> 1u, !(i & 1u));
       remaining_buffers &= ~bit;
     }
@@ -334,6 +338,8 @@ static void usb_handle_buff_status() {
 void isr_usbctrl(void) {
   uint32_t status = usb_hw->ints;
   uint32_t handled = 0;
+
+  printf("status %d\n", status);
 
   if (status & USB_INTS_SETUP_REQ_BITS) {
     handled |= USB_INTS_SETUP_REQ_BITS;
@@ -353,7 +359,7 @@ void isr_usbctrl(void) {
   }
 
   if (status ^ handled) {
-    panic("Unhandled IRQ 0x%x\n", (uint)(status ^ handled));
+    printf("Unhandled IRQ 0x%x\n", (uint)(status ^ handled));
   }
 }
 
@@ -405,12 +411,13 @@ void ep2_out_handler(uint8_t *buf, uint16_t len) {
 }
 
 void ep3_in_handler(uint8_t *buf, uint16_t len) {
-  memcpy(buf, (void *)ptr, len);
-  ptr += len;
+  printf("3/in %d\n", len);
   struct usb_endpoint_configuration *ep =
       usb_get_endpoint_configuration(EP3_IN_ADDR);
 
-  uint32_t val = USB_BUF_CTRL_FULL | USB_BUF_CTRL_SEL | len;
+  memcpy((void *)ep->data_buffer, (void *)ptr, len);
+  ptr += len;
+  uint32_t val = USB_BUF_CTRL_AVAIL | USB_BUF_CTRL_FULL | len;
   val |= ep->next_pid ? USB_BUF_CTRL_DATA1_PID : USB_BUF_CTRL_DATA0_PID;
   *ep->buffer_control = val;
   ep->next_pid ^= 1u;
