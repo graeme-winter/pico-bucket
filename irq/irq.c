@@ -2,6 +2,7 @@
 
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
+#include "hardware/sync.h"
 #include "pico/stdlib.h"
 
 // GPIO input
@@ -9,6 +10,8 @@
 #define BTN0 11
 #define BTN1 12
 #define BTN2 13
+
+volatile bool pressed[3] = {false, false, false};
 
 // GPIO output
 
@@ -19,8 +22,7 @@
 // IRQ handler
 
 void __not_in_flash_func(irq_callback)(uint32_t gpio, uint32_t event) {
-  // toggle corresponding GPIO
-  gpio_xor_mask(1 << (gpio + 7));
+  pressed[gpio - BTN0] = true;
 }
 
 int main() {
@@ -31,6 +33,7 @@ int main() {
   for (uint32_t btn = BTN0; btn <= BTN2; btn++) {
     gpio_init(btn);
     gpio_set_dir(btn, GPIO_IN);
+    gpio_pull_down(btn);
   }
 
   for (uint32_t led = LED0; led <= LED2; led++) {
@@ -46,5 +49,14 @@ int main() {
   gpio_set_irq_enabled(BTN2, mask, true);
 
   while (true) {
+    uint32_t irq_flags = save_and_disable_interrupts();
+    for (uint32_t btn = BTN0; btn <= BTN2; btn++) {
+      if (pressed[btn - BTN0]) {
+        gpio_xor_mask(1 << (btn + 7));
+        pressed[btn - BTN0] = false;
+      }
+    }
+    restore_interrupts(irq_flags);
+    sleep_ms(10);
   }
 }
