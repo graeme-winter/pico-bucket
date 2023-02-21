@@ -30,6 +30,7 @@ int main() {
 
   for (uint32_t btn = BTN0; btn <= BTN2; btn++) {
     gpio_init(btn);
+    gpio_pull_down(btn);
     gpio_set_dir(btn, GPIO_IN);
   }
 
